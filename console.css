@@ -1,0 +1,72 @@
+textarea {
+     -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+     -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+     box-sizing: border-box;         /* Opera/IE 8+ */
+     /* width: 100% !important; */
+     resize: vertical;
+}
+
+#container {
+    height: 500px;
+    position:relative;
+    margin: 0px auto;
+}
+
+#left {
+    width:49%;
+    height:100%;
+}
+
+#separator{
+    width:1%;
+    height:100%;
+}
+
+#right {
+    width:49%;
+    height:100%;
+}
+
+#editor {
+    float:none;
+    width:100%;
+    height:100%;
+    resize: vertical;
+}
+
+#controls {
+    width:10%;
+    float:none;
+}
+
+#console {
+    width:100%;
+    height:100%;
+    font-size: 16px;
+    float:none;
+    /* background-color:var(--dark-3); */
+    /* color:var(--clear-1); */
+
+    background-color: #f5f5f5;
+    color: #4a4a4a;
+    border: none;
+}
+
+#legend{
+    position: absolute;
+    margin-left: 5%;
+    visibility: hidden;
+}
+
+
+#container.container:not(.is-max-desktop):not(.is-max-widescreen) {
+    max-width: 1000px;
+}
+#container.container:not(.is-max-desktop) {
+    max-width: 1000px;
+}
+
+.editor-panel {
+    padding: 10px 0px;
+    background-color: #00254a;
+}

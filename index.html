@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>파이런</title>
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./console.css">
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans">
+
+
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/brython@3.9.0/brython_stdlib.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier"></script>
+
+
+<script src="./ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="./ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+  var SpeechRecognition = (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)
+  
+
+  if(SpeechRecognition) {
+    window.isChrome = true
+    window.recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)()
+    window.utterance = new SpeechSynthesisUtterance()
+    window.synthesis = window.speechSynthesis
+  } else {
+    window.isChrome = false
+  }
+</script>
+
+<script type="text/python3">
+
+from browser import document as doc
+from browser import html
+import boteditor
+
+doc['share_code'].bind('click', boteditor.share_code)
+doc['run'].bind('click',lambda *args: boteditor.run())
+</script>
+
+</head>
+<body onload="brython({debug:1})">
+
+<nav class="level is-mobile" style="background-color: white; padding: 10px 20px; margin-bottom: 0px;">
+  <!-- Left side -->
+  <div class="level-left">
+    <div class="level-item">
+      <a href="/">
+        <img src="./images/pyrun.png" style="height: 34px;">
+      </a>
+      <p class="level-item">
+        <a href="/">
+          <img src="./images/pyrun_right.png" style="margin-left: 5px; margin-top: 10px; height: 24px;">
+        </a>
+      </p>
+    </div>
+  </div>
+  <!-- Right side -->
+  <div class="level-right">
+    <button @click="shareCode()" id="share_code" class="button is-small mb-1">코드공유</button>
+  </div>
+</nav>
+
+<div class="columns m-1">
+  <div id="container" class="column is-narrow p-1">
+    <div id="py_console" class="box" style="width: 580px; min-height: 320px">
+      <div id="pydiv"></div>
+    </div>
+    <div id="learn_panel" class="box noshow">
+      <div class="columns is-mobile">
+        <div class="column is-10">
+          <input id="learn_text" type="text" class="input is-small" placeholder="챗봇이 무엇을 보고 있나요?">
+        </div>
+        <div class="column is-2">
+          <button id="learn_button" class="button is-small is-primary is-fullwidth">학습</button>
+        </div>
+      </div>
+      <div class="columns is-mobile">
+        <div class="column is-12">
+          <button id="reset_button" class="button is-small is-danger" style="height: 24px;">학습 모두 지우고 다시하기</button>
+        </div>
+      </div>
+    </div>
+    <textarea id="game_info" class="textarea is-small" placeholder="..." disabled>
+      화살표 이동키를 이용 로봇을 움직여보세요.
+    </textarea>
+  </div>
+  <div class="column p-1">
+    <div class="box">
+      <div class="editor-panel">
+        <div id="editor" style="min-height: 500px; width:100%;"></div>
+      </div>
+      <div id="run" class="box box-run-button" style="margin-top: 8px; margin-bottom: 8px; padding: 3px; background-color: #fbe5bf; cursor: pointer;">
+        <div class="container" style="max-width: 192px; height:42px; padding: 5px;">
+          <img src="./images/run_button.png" style="height:28px"/>
+        </div>
+      </div>
+      <textarea id="console" class="result p-3" autocomplete="off" disabled></textarea>
+    </div>
+  </div>  
+</div>
+
+<video autoplay playsinline muted id="webcam" width="60" height="60"></video>
+
+<script type="text/javascript">
+  
+  window.mobilenet = mobilenet
+  window.tf = tf
+
+  window.saveModel = function() {
+    storage = window.localStorage
+    var modelString = JSON.stringify( Object.entries(window.classifier.getClassifierDataset()).map(([label, data])=>[label, Array.from(data.dataSync()), data.shape]) )
+    storage.setItem("classifier-model", modelString)
+  }
+
+  window.loadModel = function() {
+    storage = window.localStorage
+    window.classifier = knnClassifier.create();
+    var modelString = storage.getItem("classifier-model")
+    if(modelString) {
+      window.classifier.setClassifierDataset( Object.fromEntries( JSON.parse(modelString).map(([label, data, shape])=>[label, tf.tensor(data, shape)]) ) );
+    }
+  }
+
+  window.resetModel = function() {
+    var result = confirm("정말로 학습을 초기화 하겠습니까?")
+    if(result) {
+      storage = window.localStorage
+      storage.removeItem("classifier-model")
+    } 
+  }
+  
+  window.loadModel()
+</script>
+</body>
+</html>
+
+<style>
+.box {
+  padding: 10px;
+}
+.box-run-button {
+  box-shadow: 2px 2px 2px 2px gray;
+}
+
+.main {
+  resize: both;
+  overflow: auto;
+}
+
+.CodeMirror {
+  resize: both;
+}
+
+pre.result {
+  resize: both;
+}
+
+#game_info {
+  font-size: 16px !important;
+}
+
+#webcam {
+  border-radius: 8px;
+  position: absolute;
+  top: 80px;
+  left: 24px;
+}
+
+#learn_panel {
+  display: none;
+}
+#learn_panel.show {
+  display: block;
+}
+</style>
